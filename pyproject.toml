@@ -1,0 +1,67 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "token-tracker"
+version = "0.1.0"
+description = "Pre-flight token analyzer and usage tracker for Claude — gas optimization for LLM prompts"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+keywords = ["llm", "token", "anthropic", "claude", "prompt-optimization", "cost", "ai"]
+authors = [
+    { name = "Token Tracker contributors" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Utilities",
+]
+dependencies = [
+    "anthropic>=0.40.0",
+    "tiktoken>=0.6.0",
+    "rich>=13.0.0",
+    "typer>=0.12.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "ruff>=0.4.0",
+]
+
+[project.urls]
+Homepage      = "https://github.com/emam07/token-tracker"
+Repository    = "https://github.com/emam07/token-tracker"
+Issues        = "https://github.com/emam07/token-tracker/issues"
+Documentation = "https://github.com/emam07/token-tracker#readme"
+
+[project.scripts]
+tt = "token_tracker.cli.main:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["token_tracker"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = [
+    "E501",  # line too long — handled by formatter
+    "B008",  # function calls in arg defaults (typer.Option pattern)
+    "A002",  # builtin shadow (we shadow `analyze` deliberately)
+]
