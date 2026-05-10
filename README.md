@@ -27,7 +27,9 @@ All analysis is **offline** — zero extra API calls. Storage is local SQLite.
 
 ## Demo
 
-> *(Add a recorded GIF or asciinema link here — see [`tt demo`](#try-the-walkthrough) below.)*
+![Token Tracker demo](docs/demo.gif)
+
+*Run `tt demo` yourself to see all features without using any API credits.*
 
 ---
 
