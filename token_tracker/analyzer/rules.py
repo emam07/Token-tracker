@@ -9,6 +9,9 @@ def check_vague_intent(prompt: str) -> Warning | None:
         r"\bcan you (talk|speak|say something) about\b",
         r"\b(something|stuff|things) about\b",
         r"\bwhat do you (know|think) about\b",
+        r"\bi (want|need|'?d like) to know\b",
+        r"\bcan (u|you) tell me\b",
+        r"\bdo you know (anything|something) about\b",
     ]
     for p in patterns:
         if re.search(p, prompt, re.IGNORECASE):
@@ -42,7 +45,7 @@ def check_missing_format(prompt: str) -> Warning | None:
 
 def check_missing_scope(prompt: str) -> Warning | None:
     wants_explanation = re.search(
-        r"\b(explain|describe|summarize|tell me about|give me an overview|introduction to|guide (to|on))\b",
+        r"\b(explain|describe|summarize|tell me about|give me an overview|introduction to|guide (to|on)|i don'?t know (about|anything about)|teach me about)\b",
         prompt, re.IGNORECASE,
     )
     has_scope = re.search(
@@ -116,11 +119,26 @@ def check_wall_of_text(prompt: str, estimated_tokens: int) -> Warning | None:
 
 
 def check_ambiguous_pronoun(prompt: str) -> Warning | None:
+    words = prompt.split()
+    # Count standalone 'it' references
+    it_count = sum(
+        1 for w in words
+        if re.fullmatch(r"it[,.]?", w, re.IGNORECASE)
+    )
+    # Flag multiple ambiguous 'it' in any length prompt
+    if it_count >= 3:
+        return Warning(
+            rule="AMBIGUOUS_PRONOUN",
+            severity="low",
+            message=f"'it' appears {it_count} times — each likely refers to something different.",
+            suggestion="Replace each 'it' with the actual noun it refers to.",
+        )
+    # Original short-prompt check for fix/do/make it
     match = re.search(
         r"\b(fix it|do it|make it|change it|update it|improve it|rewrite it|check it)\b",
         prompt, re.IGNORECASE,
     )
-    if match and len(prompt.split()) < 15:
+    if match and len(words) < 15:
         return Warning(
             rule="AMBIGUOUS_PRONOUN",
             severity="low",
@@ -145,7 +163,77 @@ def check_open_ended_task(prompt: str) -> Warning | None:
     return None
 
 
-# Rules that take only (prompt) - wall_of_text is called separately with token count
+def check_text_speak(prompt: str) -> Warning | None:
+    """Informal abbreviations and text-speak reduce clarity and waste tokens on correction."""
+    patterns = [
+        r"\bcan u\b",
+        r"\b(ur|u r)\b",
+        r"\b(plz|pls)\b",
+        r"\bidk\b",
+        r"\br u\b",
+        r"\bcuz\b",
+        r"\bw/o\b",
+        r"\b(gonna|wanna|gotta)\b",
+    ]
+    found = [
+        re.search(p, prompt, re.IGNORECASE).group()
+        for p in patterns
+        if re.search(p, prompt, re.IGNORECASE)
+    ]
+    if found:
+        examples = ", ".join(f"'{f}'" for f in found[:3])
+        return Warning(
+            rule="TEXT_SPEAK",
+            severity="low",
+            message=f"Informal shorthand found: {examples}. Claude responds to formal language more precisely.",
+            suggestion="Write out full words: 'can you' not 'can u', 'your' not 'ur'.",
+        )
+    return None
+
+
+def check_vague_closing(prompt: str) -> Warning | None:
+    """Prompt ends with a vague request rather than a specific ask."""
+    closing_patterns = [
+        r"\bcan (u|you) tell me\s*[?.]?\s*$",
+        r"\bany (thoughts|ideas|suggestions|help)\s*[?.]?\s*$",
+        r"\bwhat do you think\s*[?.]?\s*$",
+        r"\b(please help|help me out|help me)\s*[?.]?\s*$",
+        r"\bi need help\s*[?.]?\s*$",
+        r"\blet me know\s*[?.]?\s*$",
+        r"\bjust help\s*[?.]?\s*$",
+    ]
+    for p in closing_patterns:
+        if re.search(p, prompt, re.IGNORECASE):
+            return Warning(
+                rule="VAGUE_CLOSING",
+                severity="high",
+                message="Prompt ends with a vague request — Claude has no specific task to complete.",
+                suggestion="End with a concrete ask: 'List 3 steps to fix this' or 'Explain X in 2 sentences'.",
+            )
+    return None
+
+
+def check_topic_drift(prompt: str) -> Warning | None:
+    """Prompt switches to an unrelated topic mid-way, splitting Claude's focus."""
+    # Look for a topic switch after 'but' that introduces a completely different subject
+    # Heuristic: 'but I don't know' / 'but also' / 'also, separately' mid-prompt
+    drift_patterns = [
+        r"\bbut (also,?\s*)?(i don'?t know|i have no (idea|knowledge|clue)|i'?m (not|a) (sure|familiar|new to))\b",
+        r"\b(also,?\s*separately|on a (different|separate|unrelated) (note|topic|subject))\b",
+        r"\band (also,?\s*)?(by the way|btw|separately)\b",
+    ]
+    for p in drift_patterns:
+        if re.search(p, prompt, re.IGNORECASE):
+            return Warning(
+                rule="TOPIC_DRIFT",
+                severity="medium",
+                message="Prompt introduces an unrelated topic mid-way — split into two separate prompts.",
+                suggestion="One prompt, one task. Send the second question as a follow-up.",
+            )
+    return None
+
+
+# Rules that take only (prompt) — check_wall_of_text is called separately with token count
 RULES = [
     check_vague_intent,
     check_missing_format,
@@ -154,4 +242,7 @@ RULES = [
     check_redundant_context,
     check_ambiguous_pronoun,
     check_open_ended_task,
+    check_text_speak,
+    check_vague_closing,
+    check_topic_drift,
 ]

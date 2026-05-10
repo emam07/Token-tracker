@@ -6,6 +6,22 @@ All notable changes to this project will be documented in this file. Format foll
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-11
+
+### Added
+
+- `tt run script.py` — zero code change tracking; wraps any existing Python script
+- `token_tracker.patch()` — one-line monkey-patch for `anthropic.Anthropic`
+- `TEXT_SPEAK` rule (low): catches informal shorthand like "can u", "ur", "plz"
+- `VAGUE_CLOSING` rule (high): catches prompts ending with no specific ask ("can u tell me", "any thoughts?")
+- `TOPIC_DRIFT` rule (medium): catches mid-prompt topic switches
+
+### Improved
+
+- `VAGUE_INTENT` — now catches "can u tell me", "i want to know", "do you know anything about"
+- `AMBIGUOUS_PRONOUN` — now catches 3+ "it" references in any length prompt
+- `MISSING_SCOPE` — now catches "i don't know about X" as open-ended explanation
+
 ## [0.1.0] - 2026-05-10
 
 Initial release.
