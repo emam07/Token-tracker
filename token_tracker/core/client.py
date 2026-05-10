@@ -110,14 +110,16 @@ class TrackedClient:
         analyze: bool = True,
         interactive: bool = True,
         warn_threshold: int = 60,
+        _client=None,
         **kwargs,
     ):
         init_db()
-        self._anthropic = (
-            anthropic.Anthropic(api_key=api_key, **kwargs)
-            if api_key
-            else anthropic.Anthropic(**kwargs)
-        )
+        if _client is not None:
+            self._anthropic = _client
+        elif api_key:
+            self._anthropic = anthropic.Anthropic(api_key=api_key, **kwargs)
+        else:
+            self._anthropic = anthropic.Anthropic(**kwargs)
         self.analyze = analyze
         self.interactive = interactive
         self.warn_threshold = warn_threshold

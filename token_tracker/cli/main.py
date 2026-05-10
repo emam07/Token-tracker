@@ -65,5 +65,43 @@ def demo() -> None:
     run_demo()
 
 
+@app.command(
+    context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
+)
+def run(ctx: typer.Context) -> None:
+    """Run any Python script with automatic token tracking — no code changes needed.
+
+    Examples:
+        tt run script.py
+        tt run script.py arg1 arg2
+        tt run python script.py
+    """
+    import runpy
+    import sys
+
+    from token_tracker.autopatch import patch
+
+    args = ctx.args
+    if not args:
+        raise typer.BadParameter("Provide a script path, e.g.: tt run script.py")
+
+    script = args[0]
+    script_args = args[1:]
+
+    if script in ("python", "python3", "python.exe", "python3.exe"):
+        if not script_args:
+            raise typer.BadParameter("Provide a script path after 'python'.")
+        script = script_args[0]
+        script_args = script_args[1:]
+
+    patch(interactive=False)
+    sys.argv = [script] + list(script_args)
+
+    try:
+        runpy.run_path(script, run_name="__main__")
+    except SystemExit as exc:
+        raise SystemExit(exc.code) from None
+
+
 if __name__ == "__main__":
     app()
