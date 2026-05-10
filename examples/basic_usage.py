@@ -7,7 +7,7 @@ Every call goes through:
   3. SQLite logging (input/output tokens, cost, efficiency score)
 
 Run:
-    pip install token-tracker
+    pip install promptmeter
     export ANTHROPIC_API_KEY="sk-ant-..."
     python examples/basic_usage.py
 

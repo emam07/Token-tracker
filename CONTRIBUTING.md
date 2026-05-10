@@ -7,8 +7,8 @@ Thanks for considering a contribution. The lowest-friction way to help is **addi
 ## Setting up
 
 ```bash
-git clone https://github.com/emam07/token-tracker.git
-cd token-tracker
+git clone https://github.com/emam07/Token-tracker.git
+cd Token-tracker
 python -m venv .venv
 .venv/Scripts/activate          # Windows
 source .venv/bin/activate       # macOS / Linux
@@ -93,4 +93,4 @@ Open an issue with the **"Bug"** template and include:
 
 ## Questions
 
-Open a [discussion](https://github.com/emam07/token-tracker/discussions) before a big change.
+Open a [discussion](https://github.com/emam07/Token-tracker/discussions) before a big change.

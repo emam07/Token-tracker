@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "token-tracker"
+name = "promptmeter"
 version = "0.1.0"
 description = "Pre-flight token analyzer and usage tracker for Claude — gas optimization for LLM prompts"
 readme = "README.md"
@@ -39,10 +39,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage      = "https://github.com/emam07/token-tracker"
-Repository    = "https://github.com/emam07/token-tracker"
-Issues        = "https://github.com/emam07/token-tracker/issues"
-Documentation = "https://github.com/emam07/token-tracker#readme"
+Homepage      = "https://github.com/emam07/Token-tracker"
+Repository    = "https://github.com/emam07/Token-tracker"
+Issues        = "https://github.com/emam07/Token-tracker/issues"
+Documentation = "https://github.com/emam07/Token-tracker#readme"
 
 [project.scripts]
 tt = "token_tracker.cli.main:app"

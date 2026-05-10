@@ -25,6 +25,6 @@ If a specific prompt triggered it:
 
 ## Environment
 
-- Token Tracker version: <!-- `pip show token-tracker` -->
+- promptmeter version: <!-- `pip show promptmeter` -->
 - Python version: <!-- `python --version` -->
 - OS:

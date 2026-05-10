@@ -2,10 +2,10 @@
 
 > **Gas optimization for LLM prompts.** A pre-flight analyzer + usage tracker for the Claude API. Catches vague, wasteful, or open-ended prompts *before* they hit the wire — and suggests a leaner rewrite.
 
-[![PyPI version](https://img.shields.io/pypi/v/token-tracker.svg)](https://pypi.org/project/token-tracker/)
-[![Python](https://img.shields.io/pypi/pyversions/token-tracker.svg)](https://pypi.org/project/token-tracker/)
+[![PyPI version](https://img.shields.io/pypi/v/promptmeter.svg)](https://pypi.org/project/promptmeter/)
+[![Python](https://img.shields.io/pypi/pyversions/promptmeter.svg)](https://pypi.org/project/promptmeter/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![CI](https://github.com/emam07/token-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/emam07/token-tracker/actions)
+[![CI](https://github.com/emam07/Token-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/emam07/Token-tracker/actions)
 
 ---
 
@@ -36,7 +36,7 @@ All analysis is **offline** — zero extra API calls. Storage is local SQLite.
 ## Quickstart
 
 ```bash
-pip install token-tracker
+pip install promptmeter
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
