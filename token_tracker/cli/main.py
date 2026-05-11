@@ -31,8 +31,8 @@ def sessions(
     show_sessions(limit)
 
 
-@app.command()
-def analyze(
+@app.command(name="analyze")
+def analyze_prompt(
     prompt: str = typer.Argument(..., help="Prompt text to analyze"),
     model:  str = typer.Option("claude-sonnet-4-6", "--model", "-m", help="Target model"),
 ) -> None:
@@ -68,13 +68,19 @@ def demo() -> None:
 @app.command(
     context_settings={"allow_extra_args": True, "ignore_unknown_options": True},
 )
-def run(ctx: typer.Context) -> None:
+def run(
+    ctx: typer.Context,
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="Show warnings and prompt for action before each call"),
+    session_name: str = typer.Option("auto", "--session", "-s", help="Session name for tracking"),
+    threshold: int = typer.Option(60, "--threshold", "-t", help="Efficiency score below which warnings are shown"),
+) -> None:
     """Run any Python script with automatic token tracking — no code changes needed.
 
     Examples:
         tt run script.py
         tt run script.py arg1 arg2
         tt run python script.py
+        tt run --interactive --session myapp script.py
     """
     import runpy
     import sys
@@ -94,7 +100,7 @@ def run(ctx: typer.Context) -> None:
         script = script_args[0]
         script_args = script_args[1:]
 
-    patch(interactive=False)
+    patch(interactive=interactive, session_name=session_name, warn_threshold=threshold)
     sys.argv = [script] + list(script_args)
 
     try:

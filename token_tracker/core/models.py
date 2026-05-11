@@ -16,16 +16,16 @@ class PromptAnalysis:
     estimated_input_tokens: int
     estimated_cost_usd: float
     efficiency_score: int
-    warnings: list
-    suggested_rewrite: str = ""   # populated in Phase 3
-    token_savings: int = 0        # populated in Phase 3
+    warnings: list[Warning]
+    suggested_rewrite: str = ""
+    token_delta: int = 0   # positive = tokens saved, negative = tokens added
 
 
 @dataclass
 class Session:
     name: str = "default"
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    started_at: datetime = field(default_factory=datetime.utcnow)
+    started_at: datetime = field(default_factory=datetime.now)
     ended_at: datetime | None = None
 
 
@@ -42,4 +42,4 @@ class UsageRecord:
     efficiency_score: int | None = None
     flagged: bool = False
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=datetime.now)

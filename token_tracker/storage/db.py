@@ -8,11 +8,17 @@ DB_PATH = Path.home() / ".token_tracker" / "usage.db"
 
 
 def get_connection() -> sqlite3.Connection:
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    _ensure_schema(conn)
-    return conn
+    try:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        _ensure_schema(conn)
+        return conn
+    except sqlite3.Error as exc:
+        raise RuntimeError(
+            f"Token Tracker: cannot open database at {DB_PATH}. "
+            f"Check disk space and file permissions.\nOriginal error: {exc}"
+        ) from exc
 
 
 def _ensure_schema(conn: sqlite3.Connection) -> None:
@@ -38,6 +44,11 @@ def _ensure_schema(conn: sqlite3.Connection) -> None:
             efficiency_score    INTEGER,
             flagged             INTEGER
         );
+
+        CREATE INDEX IF NOT EXISTS idx_usage_timestamp ON usage_records(timestamp);
+        CREATE INDEX IF NOT EXISTS idx_usage_flagged   ON usage_records(flagged);
+        CREATE INDEX IF NOT EXISTS idx_usage_session   ON usage_records(session_id);
+        CREATE INDEX IF NOT EXISTS idx_usage_model     ON usage_records(model);
     """)
 
 
@@ -108,12 +119,12 @@ def _summary_query(where_clause: str, params: tuple):
 
 
 def get_usage_today():
-    today = datetime.utcnow().date().isoformat()
+    today = datetime.now().date().isoformat()  # local time — matches stored timestamps
     return _summary_query("WHERE timestamp LIKE ?", (f"{today}%",))
 
 
 def get_usage_range(days: int):
-    since = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    since = (datetime.now() - timedelta(days=days)).isoformat()
     return _summary_query("WHERE timestamp >= ?", (since,))
 
 
@@ -141,7 +152,7 @@ def get_top_waste(limit: int = 10, days: int = 30):
 
 
 def get_cost_by_model(days: int = 30):
-    since = (datetime.utcnow() - timedelta(days=days)).isoformat()
+    since = (datetime.now() - timedelta(days=days)).isoformat()
     with get_connection() as conn:
         return conn.execute(
             """
@@ -156,4 +167,27 @@ def get_cost_by_model(days: int = 30):
             ORDER BY cost_usd DESC
             """,
             (since,),
+        ).fetchall()
+
+
+def get_cache_savings(period: str):
+    """Return (model, cache_read_tokens) rows for the period so callers can compute per-model savings."""
+    if period == "today":
+        today = datetime.now().date().isoformat()
+        clause, params = "WHERE timestamp LIKE ?", (f"{today}%",)
+    elif period == "week":
+        since = (datetime.now() - timedelta(days=7)).isoformat()
+        clause, params = "WHERE timestamp >= ?", (since,)
+    else:
+        since = (datetime.now() - timedelta(days=30)).isoformat()
+        clause, params = "WHERE timestamp >= ?", (since,)
+
+    with get_connection() as conn:
+        return conn.execute(
+            f"""
+            SELECT model, COALESCE(SUM(cache_read_tokens), 0) AS cache_read_tokens
+            FROM usage_records {clause}
+            GROUP BY model
+            """,
+            params,
         ).fetchall()

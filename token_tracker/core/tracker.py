@@ -1,4 +1,5 @@
 import hashlib
+import re
 
 from token_tracker.core.models import UsageRecord
 from token_tracker.storage.db import insert_usage_record
@@ -12,6 +13,11 @@ MODEL_COSTS: dict[str, dict[str, float]] = {
 _DEFAULT_COSTS = MODEL_COSTS["claude-sonnet-4-6"]
 
 
+def _normalize_model(model: str) -> str:
+    """Strip trailing date suffix from model IDs (e.g. claude-haiku-4-5-20251001 → claude-haiku-4-5)."""
+    return re.sub(r"-\d{8}$", "", model or "")
+
+
 def calculate_cost(
     model: str,
     input_tokens: int,
@@ -19,7 +25,7 @@ def calculate_cost(
     cache_read_tokens: int = 0,
     cache_write_tokens: int = 0,
 ) -> float:
-    c = MODEL_COSTS.get(model, _DEFAULT_COSTS)
+    c = MODEL_COSTS.get(_normalize_model(model), _DEFAULT_COSTS)
     return (
         input_tokens       * c["input"]        / 1_000_000
         + output_tokens    * c["output"]       / 1_000_000

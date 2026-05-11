@@ -74,11 +74,11 @@ def check_filler_words(prompt: str) -> Warning | None:
         r"\bthank you in advance\b",
         r"\bif it'?s? (possible|not too much trouble)\b",
     ]
-    found = [
-        re.search(p, prompt, re.IGNORECASE).group()
-        for p in filler_patterns
-        if re.search(p, prompt, re.IGNORECASE)
-    ]
+    found = []
+    for p in filler_patterns:
+        m = re.search(p, prompt, re.IGNORECASE)
+        if m:
+            found.append(m.group())
     if found:
         examples = ", ".join(f"'{f}'" for f in found[:3])
         return Warning(
@@ -175,11 +175,11 @@ def check_text_speak(prompt: str) -> Warning | None:
         r"\bw/o\b",
         r"\b(gonna|wanna|gotta)\b",
     ]
-    found = [
-        re.search(p, prompt, re.IGNORECASE).group()
-        for p in patterns
-        if re.search(p, prompt, re.IGNORECASE)
-    ]
+    found = []
+    for p in patterns:
+        m = re.search(p, prompt, re.IGNORECASE)
+        if m:
+            found.append(m.group())
     if found:
         examples = ", ".join(f"'{f}'" for f in found[:3])
         return Warning(

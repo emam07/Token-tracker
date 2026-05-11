@@ -5,7 +5,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from token_tracker.core.tracker import _DEFAULT_COSTS, MODEL_COSTS, _normalize_model
 from token_tracker.storage.db import (
+    get_cache_savings,
     get_cost_by_model,
     get_sessions,
     get_top_waste,
@@ -61,15 +63,15 @@ def show_analysis(analysis, original_prompt: str = "") -> None:
         _show_rewrite_diff(
             original=original_prompt,
             rewrite=analysis.suggested_rewrite,
-            token_savings=analysis.token_savings,
+            token_delta=analysis.token_delta,
         )
 
 
-def _show_rewrite_diff(original, rewrite, token_savings):
-    if token_savings > 0:
-        delta_text = f"[green]-{token_savings} tokens[/green]"
-    elif token_savings < 0:
-        delta_text = f"[yellow]+{-token_savings} tokens (added constraints)[/yellow]"
+def _show_rewrite_diff(original, rewrite, token_delta):
+    if token_delta > 0:
+        delta_text = f"[green]-{token_delta} tokens[/green]"
+    elif token_delta < 0:
+        delta_text = f"[yellow]+{-token_delta} tokens (added constraints)[/yellow]"
     else:
         delta_text = "[dim]same length[/dim]"
 
@@ -127,8 +129,16 @@ def show_report(period: str = "today") -> None:
         console.print(f"[dim]No usage data for {period}.[/dim]")
         return
 
-    # Rough cache saving estimate uses sonnet cache_read rate as default
-    cache_saved = (row["cache_read_tokens"] or 0) * (3.00 - 0.30) / 1_000_000
+    # Compute cache savings using the actual per-model input vs cache_read rates
+    cache_saved = sum(
+        (r["cache_read_tokens"] or 0)
+        * (
+            MODEL_COSTS.get(_normalize_model(r["model"] or ""), _DEFAULT_COSTS)["input"]
+            - MODEL_COSTS.get(_normalize_model(r["model"] or ""), _DEFAULT_COSTS)["cache_read"]
+        )
+        / 1_000_000
+        for r in get_cache_savings(period)
+    )
 
     table = Table(box=box.SIMPLE, show_header=False, padding=(0, 2))
     table.add_column("Metric", style="bold cyan", no_wrap=True)

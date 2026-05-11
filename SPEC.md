@@ -176,6 +176,9 @@ Each rule is a function: `(prompt: str) -> Warning | None`
 | `WALL_OF_TEXT` | Unstructured dump > 500 tokens | high | pasting 2000 words without summarizing |
 | `AMBIGUOUS_PRONOUN` | "it", "this", "that" without clear referent | low | "fix it" — fix what? |
 | `OPEN_ENDED_TASK` | Task has unbounded output | high | "write everything about X" |
+| `TEXT_SPEAK` | Informal abbreviations reduce clarity | low | "can u", "ur", "plz", "gonna" |
+| `VAGUE_CLOSING` | Prompt ends with no specific ask | high | "any thoughts?", "please help" |
+| `TOPIC_DRIFT` | Unrelated topic introduced mid-prompt | medium | "but also, on a different note…" |
 
 ---
 
@@ -299,7 +302,7 @@ Top warnings today:
 
 ### Phase 2 — Pre-flight Analyzer (Week 2)
 - [ ] `tiktoken` integration for token estimation
-- [ ] All 8 rules implemented in `rules.py`
+- [ ] All 11 rules implemented in `rules.py`
 - [ ] `EfficiencyScore` computation
 - [ ] `PromptAnalysis` dataclass
 - [ ] Warning output in terminal (Rich formatting)
