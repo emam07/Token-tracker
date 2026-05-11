@@ -100,6 +100,10 @@ def run(
         script = script_args[0]
         script_args = script_args[1:]
 
+    from pathlib import Path
+    if not Path(script).exists():
+        raise typer.BadParameter(f"Script not found: {script}")
+
     patch(interactive=interactive, session_name=session_name, warn_threshold=threshold)
     sys.argv = [script] + list(script_args)
 
