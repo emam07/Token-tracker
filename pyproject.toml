@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "promptmeter"
-version = "0.2.1"
+version = "0.2.2"
 description = "Pre-flight token analyzer and usage tracker for Claude — gas optimization for LLM prompts"
 readme = "README.md"
 requires-python = ">=3.11"
