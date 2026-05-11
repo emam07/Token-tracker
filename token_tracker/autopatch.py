@@ -9,6 +9,7 @@ def patch(
     analyze: bool = True,
     interactive: bool = False,
     warn_threshold: int = 60,
+    verbose: bool = False,
 ) -> None:
     """Replace anthropic.Anthropic with a tracked version. Safe to call multiple times."""
     global _patched
@@ -18,11 +19,11 @@ def patch(
     _orig = _mod.Anthropic
     from token_tracker.core.client import TrackedClient
 
-    _s, _a, _i, _w = session_name, analyze, interactive, warn_threshold
+    _s, _a, _i, _w, _v = session_name, analyze, interactive, warn_threshold, verbose
 
     def _auto(api_key=None, **kwargs):
         inner = _orig(api_key=api_key, **kwargs) if api_key else _orig(**kwargs)
-        return TrackedClient(_client=inner, session_name=_s, analyze=_a, interactive=_i, warn_threshold=_w)
+        return TrackedClient(_client=inner, session_name=_s, analyze=_a, interactive=_i, warn_threshold=_w, verbose=_v)
 
     _auto.__wrapped__ = _orig
     _mod.Anthropic = _auto

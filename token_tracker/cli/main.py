@@ -70,17 +70,21 @@ def demo() -> None:
 )
 def run(
     ctx: typer.Context,
-    interactive: bool = typer.Option(False, "--interactive", "-i", help="Show warnings and prompt for action before each call"),
+    interactive: bool = typer.Option(False, "--interactive", "-i", help="Prompt before each call: send / optimize+send / cancel"),
     session_name: str = typer.Option("auto", "--session", "-s", help="Session name for tracking"),
     threshold: int = typer.Option(60, "--threshold", "-t", help="Efficiency score below which warnings are shown"),
+    quiet: bool = typer.Option(False, "--quiet", "-q", help="Suppress per-call output — only log to DB silently"),
 ) -> None:
-    """Run any Python script with automatic token tracking — no code changes needed.
+    """Run any Python script with real-time token tracking and analysis.
+
+    Every API call shows a pre-flight analysis panel and a post-call usage
+    panel so you can see token cost and efficiency in real time.
 
     Examples:
         tt run script.py
-        tt run script.py arg1 arg2
-        tt run python script.py
-        tt run --interactive --session myapp script.py
+        tt run --interactive script.py      # prompt before each call
+        tt run --quiet script.py            # silent — just log to DB
+        tt run --session myapp script.py    # group calls under a session name
     """
     import runpy
     import sys
@@ -104,7 +108,12 @@ def run(
     if not Path(script).exists():
         raise typer.BadParameter(f"Script not found: {script}")
 
-    patch(interactive=interactive, session_name=session_name, warn_threshold=threshold)
+    patch(
+        interactive=interactive,
+        session_name=session_name,
+        warn_threshold=threshold,
+        verbose=not quiet,   # real-time output by default; --quiet disables it
+    )
     sys.argv = [script] + list(script_args)
 
     try:

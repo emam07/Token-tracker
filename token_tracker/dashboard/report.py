@@ -114,6 +114,29 @@ def _fmt_score_compact(n) -> str:
     return f"[{color}]{score}[/{color}]"
 
 
+def show_usage(model: str, usage) -> None:
+    """Post-call panel showing actual tokens used and cost — for real-time tt run output."""
+    from token_tracker.core.tracker import calculate_cost
+    input_tok  = getattr(usage, "input_tokens",               0) or 0
+    output_tok = getattr(usage, "output_tokens",              0) or 0
+    cache_r    = getattr(usage, "cache_read_input_tokens",    0) or 0
+    cache_w    = getattr(usage, "cache_creation_input_tokens",0) or 0
+    cost = calculate_cost(model, input_tok, output_tok, cache_r, cache_w)
+
+    table = Table(box=box.SIMPLE, show_header=False, padding=(0, 2))
+    table.add_column("k", style="bold cyan", no_wrap=True)
+    table.add_column("v", justify="right")
+    table.add_row("Model",         _short_model(model))
+    table.add_row("Input tokens",  f"{input_tok:,}")
+    table.add_row("Output tokens", f"{output_tok:,}")
+    if cache_r:
+        table.add_row("Cache read", f"[dim]{cache_r:,}[/dim]")
+    table.add_row("Actual cost",   f"[bold]{_fmt_cost(cost)}[/bold]")
+
+    console.print(Panel(table, title="[bold]Actual Usage[/bold]", border_style="blue"))
+    console.print()
+
+
 def show_report(period: str = "today") -> None:
     if period == "today":
         row = get_usage_today()

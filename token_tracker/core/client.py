@@ -170,7 +170,10 @@ class _TrackedMessages:
             from token_tracker.dashboard.report import show_analysis
 
             analysis = analyze(prompt, model)
-            should_show = analysis.efficiency_score < self._owner.warn_threshold
+            should_show = (
+                self._owner.verbose
+                or analysis.efficiency_score < self._owner.warn_threshold
+            )
 
             if should_show:
                 show_analysis(analysis, original_prompt=prompt)
@@ -197,6 +200,11 @@ class _TrackedMessages:
             efficiency_score=analysis.efficiency_score if analysis else None,
             flagged=bool(analysis and analysis.warnings),
         )
+
+        if self._owner.verbose:
+            from token_tracker.dashboard.report import show_usage
+            show_usage(model, response.usage)
+
         return response
 
     def stream(self, **kwargs):
@@ -213,6 +221,7 @@ class TrackedClient:
         analyze: bool = True,
         interactive: bool = True,
         warn_threshold: int = 60,
+        verbose: bool = False,
         _client=None,
         **kwargs,
     ):
@@ -226,6 +235,7 @@ class TrackedClient:
         self.analyze = analyze
         self.interactive = interactive
         self.warn_threshold = warn_threshold
+        self.verbose = verbose
         self.session = Session(name=session_name)
         insert_session(self.session)
         self.messages = _TrackedMessages(self)
